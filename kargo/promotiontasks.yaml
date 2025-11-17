@@ -10,7 +10,7 @@ spec:
   - name: branch
     value: main
   - name: image
-    value: ghcr.io/csz-ghorg/guestbook
+    value: ghcr.io/csz-akuity/guestbook
   steps:
   # Clone the Git repository that contains the Kustomize configuration
   # to the ./src directory, and the environment configuration to ./out.
