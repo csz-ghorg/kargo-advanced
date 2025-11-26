@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kargo-advanced
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    name: kargo
+    namespace: kargo-advanced
+  source:
+    path: kargo
+    repoURL: https://github.com/csz-ghorg/kargo-advanced.git
+    targetRevision: HEAD
+    directory:
+      recurse: true
+  sources: []
+  project: guestbook
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+      enabled: false
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

@@ -11,6 +11,9 @@ spec:
   - name: '*'
     namespace: guestbook-*
     server: '*'
+  - name: '*'
+    namespace: kargo-advanced
+    server: '*'
   namespaceResourceWhitelist:
   - group: '*'
     kind: '*'
