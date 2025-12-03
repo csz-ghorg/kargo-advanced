@@ -5,6 +5,7 @@ metadata:
   namespace: kargo-advanced
 spec:
   freightCreationPolicy: Manual
+  interval: 24h0m0s
   subscriptions:
   - image:
       repoURL: ghcr.io/csz-akuity/guestbook
