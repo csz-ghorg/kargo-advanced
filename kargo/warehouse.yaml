@@ -10,7 +10,7 @@ spec:
   - image:
       repoURL: ghcr.io/csz-akuity/guestbook
       imageSelectionStrategy: SemVer
-      constraint: '<0.1.0'
+      # No constraint - tracks latest version
       allowTags: ^v?[0-9]+\.[0-9]+\.[0-9]+([\+-].*)?$
   - image:
       repoURL: docker.io/cszakuity/csz-private-repo

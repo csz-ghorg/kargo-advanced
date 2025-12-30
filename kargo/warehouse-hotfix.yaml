@@ -1,0 +1,15 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: guestbook-warehouse-hotfix
+  namespace: kargo-advanced
+spec:
+  freightCreationPolicy: Manual
+  interval: 24h0m0s
+  subscriptions:
+  - image:
+      repoURL: ghcr.io/csz-akuity/guestbook
+      imageSelectionStrategy: SemVer
+      constraint: '<0.1.0'
+      allowTags: ^v?[0-9]+\.[0-9]+\.[0-9]+([\+-].*)?$
+
