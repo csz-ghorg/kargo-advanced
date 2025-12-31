@@ -1,0 +1,79 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: PromotionTask
+metadata:
+  name: update-hotfix-warehouse-constraint
+  namespace: kargo-advanced
+spec:
+  vars:
+  - name: repoURL
+    value: https://github.com/csz-ghorg/kargo-advanced.git
+  - name: imageRepo
+    value: ghcr.io/csz-akuity/guestbook
+  - name: warehousePath
+    value: kargo/warehouse-hotfix.yaml
+  - name: mainWarehouse
+    value: guestbook-warehouse
+  - name: hotfixWarehouse
+    value: guestbook-warehouse-hotfix
+  steps:
+  - uses: git-clone
+    config:
+      repoURL: ${{ vars.repoURL }}
+      checkout:
+      - branch: main
+        path: ./src
+  - uses: yaml-parse
+    as: warehouse
+    config:
+      path: ./src/${{ vars.warehousePath }}
+      outputs:
+      - name: currentConstraint
+        fromExpression: spec.subscriptions[0].image.constraint
+  - uses: compose-output
+    as: should-update
+    config:
+      shouldUpdate: "${{ let mainImg = imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)); let constraint = task.outputs['warehouse'].currentConstraint; let constraintVersion = constraint != nil && hasPrefix(constraint, '<') ? trimPrefix(constraint, '<') : nil; mainImg != nil && constraintVersion != nil ? (let diff = semverDiff(mainImg.Tag, constraintVersion); diff == 'Minor' || diff == 'Major') : false }}"
+      mainVersion: "${{ let img = imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)); img == nil ? 'nil' : img.Tag }}"
+      constraintVersion: "${{ let constraint = task.outputs['warehouse'].currentConstraint; constraint == nil ? 'nil' : (hasPrefix(constraint, '<') ? trimPrefix(constraint, '<') : constraint) }}"
+      diff: "${{ let mainImg = imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)); let constraint = task.outputs['warehouse'].currentConstraint; let constraintVersion = constraint != nil && hasPrefix(constraint, '<') ? trimPrefix(constraint, '<') : nil; mainImg == nil || constraintVersion == nil ? 'nil' : semverDiff(mainImg.Tag, constraintVersion) }}"
+  - uses: yaml-update
+    as: update-constraint
+    if: ${{ task.outputs['should-update'] != nil && task.outputs['should-update'].shouldUpdate == true }}
+    config:
+      path: ./src/${{ vars.warehousePath }}
+      updates:
+      - key: spec.subscriptions.0.image.constraint
+        value: ${{ "<" + imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)).Tag }}
+  - uses: git-commit
+    as: commit-changes
+    if: ${{ task.outputs['should-update'] != nil && task.outputs['should-update'].shouldUpdate == true }}
+    config:
+      path: ./src
+      message: |
+        Update hotfix warehouse constraint for ${{ imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)).Tag }}
+        
+        Updated constraint to <${{ imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)).Tag }}
+  - uses: git-push
+    as: push
+    if: ${{ task.outputs['should-update'] != nil && task.outputs['should-update'].shouldUpdate == true }}
+    config:
+      path: ./src
+      targetBranch: update-hotfix-constraint-${{ imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)).Tag }}
+  - uses: git-open-pr
+    as: open-pr
+    if: ${{ task.outputs['should-update'] != nil && task.outputs['should-update'].shouldUpdate == true }}
+    config:
+      repoURL: ${{ vars.repoURL }}
+      sourceBranch: ${{ task.outputs.push.branch }}
+      targetBranch: main
+      title: 'Update hotfix warehouse constraint for ${{ imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)).Tag }}'
+      description: |
+        Automatically generated PR to update the hotfix warehouse constraint.
+        
+        Main warehouse version: `${{ imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)).Tag }}`
+        Previous hotfix constraint: `${{ task.outputs['warehouse'].currentConstraint }}`
+        New hotfix constraint: `<${{ imageFrom(vars.imageRepo, warehouse(vars.mainWarehouse)).Tag }}`
+      labels:
+      - automated
+      - warehouse-update
+
