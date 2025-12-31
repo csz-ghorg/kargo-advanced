@@ -14,7 +14,7 @@ spec:
   - name: mainWarehouse
     value: guestbook-warehouse
   - name: hotfixWarehouse
-    value: guestbook-warehouse-hotfix
+    value: hotfix-guestbook-warehouse
   steps:
   - uses: git-clone
     config:
