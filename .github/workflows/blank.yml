@@ -1,0 +1,33 @@
+name: testing kargo cli
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  testing-kargo-cli:
+    name: testing kargo cli
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Install Kargo CLI
+        run: |    
+          arch=$(dpkg --print-architecture)
+          curl -sSL -o /tmp/kargo "https://github.com/akuity/kargo/releases/latest/download/kargo-linux-${arch}"
+          chmod +x /tmp/kargo
+          sudo mv /tmp/kargo /usr/local/bin/kargo
+
+      - name: Apply to Akuity Kargo
+        env:
+          KARGO_API_ADDRESS: ${{ vars.KARGO_API_ADDRESS_PROD }}
+          KARGO_BEARER_TOKEN: ${{ secrets.KARGO_BEARER_TOKEN_PROD }}
+        shell: bash
+        run: |
+            mkdir -p ~/.config/kargo
+            echo "apiAddress: $KARGO_API_ADDRESS" > ~/.config/kargo/config
+            echo "bearerToken: $KARGO_BEARER_TOKEN" >> ~/.config/kargo/config
+            kargo version
+            kargo get projects
+
+
+
+
