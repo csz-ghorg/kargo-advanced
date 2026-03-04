@@ -18,8 +18,8 @@ jobs:
 
       - name: Apply to Akuity Kargo
         env:
-          KARGO_API_ADDRESS: ${{ vars.KARGO_API_ADDRESS_PROD }}
-          KARGO_BEARER_TOKEN: ${{ secrets.KARGO_BEARER_TOKEN_PROD }}
+          KARGO_API_ADDRESS: ${{ vars.KARGO_API_ADDRESS }}
+          KARGO_BEARER_TOKEN: ${{ secrets.KARGO_BEARER_TOKEN }}
         shell: bash
         run: |
             mkdir -p ~/.config/kargo
